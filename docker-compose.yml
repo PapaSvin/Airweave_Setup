@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  ubuntu-vm:
+    build: .
+    container_name: ubuntu-vm
+    hostname: ubuntu-vm
+    restart: unless-stopped
+    
+    # Привилегированный режим для полной функциональности как VM
+    privileged: true
+    
+    # Интерактивный режим
+    stdin_open: true
+    tty: true
+    
+    # Проброс портов
+    ports:
+      - "2222:22"    # SSH
+      - "8080:8080"  # Airweave Frontend UI
+      - "8001:8001"  # Airweave Backend API
+      - "8088:8088"  # Temporal UI
+      - "6333:6333"  # Qdrant
+      - "5432:5432"  # PostgreSQL
+      - "6379:6379"  # Redis
+      - "3000:3000"  # Node.js/React dev server
+      - "8000:8000"  # Python dev server
+      - "5000:5000"  # Flask/другие веб-приложения
+    
+    # Монтирование директорий
+    volumes:
+      # Общая папка для обмена файлами между хостом и контейнером
+      - ./shared:/home/ubuntu/shared
+      
+      # Сохранение домашней директории пользователя
+      - ubuntu_home:/home/ubuntu
+      
+      # Сохранение системных настроек
+      - ubuntu_etc:/etc
+      
+      # Сохранение установленных пакетов
+      - ubuntu_var:/var
+      
+      # Docker-in-Docker support  
+      - docker_data:/var/lib/docker
+      
+      # Опционально: монтирование всего диска C для доступа к файлам Windows
+      # - C:\:/mnt/windows
+    
+    # Переменные окружения
+    environment:
+      - DISPLAY=:0
+      - TERM=xterm-256color
+    
+    # Ограничения ресурсов (опционально)
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 1G
+
+# Именованные volumes для постоянного хранения данных
+volumes:
+  ubuntu_home:
+    driver: local
+  ubuntu_etc:
+    driver: local
+  ubuntu_var:
+    driver: local
+  docker_data:
+    driver: local
